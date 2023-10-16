@@ -52,7 +52,6 @@ def get_jobs():
                         "city": location})
     return len(list_jobs), list_jobs
 
-# print(get_jobs())
 
 @update_peviitor_api
 def scrape_and_update_peviitor(company_name, data_list):

@@ -11,7 +11,7 @@ def get_all_jobs():
 
     response = requests.get('https://boards.greenhouse.io/neweratech?t=9455d2142us', headers=DEFAULT_HEADERS)
     soup = BeautifulSoup(response.text, 'lxml')
-    print(response.status_code)
+
 
     list_of_jobs = []
     jobs = soup.find_all('div', class_ = 'opening')
@@ -20,10 +20,6 @@ def get_all_jobs():
         title = job.find('a').text.strip()
         city = job.find('span', class_ = 'location').text.split(',')[0].strip()
         location = job.find('span', class_='location').text
-        # print(link)
-        # print(title)
-        # print(location)
-        # print(city)
         if "Romania" in location:
             list_of_jobs.append({
                 "id": str(uuid.uuid4()),
@@ -34,7 +30,7 @@ def get_all_jobs():
                 "city": location})
     return list_of_jobs
 
-print(get_all_jobs())
+
 
 @update_peviitor_api
 def scrape_and_update_peviitor(company_name, data_list):

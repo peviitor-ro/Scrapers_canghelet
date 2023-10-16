@@ -13,7 +13,7 @@ def get_all_jobs():
     response = requests.get('https://careers.sofidel.com/search/?createNewAlert=false&q=&locationsearch=&optionsFacetsDD_customfield2=Romania&optionsFacetsDD_city=&optionsFacetsDD_customfield1=',
                             headers=DEFAULT_HEADERS)
     soup = BeautifulSoup(response.text, 'lxml')
-    print(response.status_code)
+
 
     list_of_jobs = []
     jobs = soup.find_all('tr', class_ = 'data-row')
@@ -21,9 +21,6 @@ def get_all_jobs():
         link = ('https://careers.sofidel.com'+job.find('a', class_ = 'jobTitle-link')['href'])
         title = job.find('a', class_ = 'jobTitle-link').text.strip()
         location = job.find('span', class_ = 'jobLocation').text.split(',')[0].strip()
-        print(link)
-        print(title)
-        print(location)
         list_of_jobs.append({
             "id": str(uuid.uuid4()),
             "job_title": title,
@@ -32,7 +29,7 @@ def get_all_jobs():
             "country": "Romania",
             "city": location})
     return list_of_jobs
-print(get_all_jobs())
+
 
 @update_peviitor_api
 def scrape_and_update_peviitor(company_name, data_list):

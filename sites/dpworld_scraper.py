@@ -14,16 +14,10 @@ def get_jobs():
     for job in response:
 
 
-        print(job['Title'])
-        print(job['Id'])
-
         title = job['Title']
         location = job['PrimaryLocation']
-
-        print(location.split(',')[0])
         id = job['Id']
         link = f'https://ehpv.fa.em2.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX_1/requisitions/preview/{id}/?location=Romania&locationId=300000000275207&locationLevel=country&mode=location'
-        print(link)
         list_of_jobs.append({"id": str(uuid.uuid4()),
                         "job_title": title,
                         "job_link":link ,
@@ -32,7 +26,6 @@ def get_jobs():
                         "city": location})
     return list_of_jobs
 
-# print(get_jobs())
 
 @update_peviitor_api
 def scrape_and_update_peviitor(company_name, data_list):
