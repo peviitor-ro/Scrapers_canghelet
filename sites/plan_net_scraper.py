@@ -23,7 +23,7 @@ def get_all_jobs():
     for job in jobs:
         link = ('https://www.plan-net.ro' + job.find('a')['href'])
         title = job.find('a').text.strip()
-        location = job.find('p').text.split(' ')[-1]
+        location = job.find('p').text.split(' ')[-1].strip()
         list_of_jobs.append({
             "id": str(uuid.uuid4()),
             "job_title": title,
