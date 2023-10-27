@@ -50,7 +50,7 @@ def get_jobs():
                         "company": "CHAINIQ",
                         "country": "Romania",
                         "city": location})
-    return len(list_jobs), list_jobs
+    return list_jobs
 
 
 @update_peviitor_api
