@@ -20,7 +20,7 @@ def get_all_jobs():
     for job in response:
         title = job['jobOpeningName']
         id = job['id']
-        link = f'https://vitaminsoftware.bamboohr.com/careers/{id}/detail'
+        link = f'https://vitaminsoftware.bamboohr.com/careers/{id}/'
 
         list_of_jobs.append({"id": str(uuid.uuid4()),
                              "job_title": title,
