@@ -1,5 +1,5 @@
 # company OPIS
-# API: https://dowjones.jobs/jobs/?location=Romania
+# API: https://dowjones.jobs/jobs/?q=OPIS&location=Romania
 
 
 
@@ -17,7 +17,7 @@ def get_all_jobs():
     and collects data from OPIS API.
     """
 
-    response = requests.get('https://dowjones.jobs/jobs/?location=Romania', headers=DEFAULT_HEADERS)
+    response = requests.get('https://dowjones.jobs/jobs/?q=OPIS&location=Romania', headers=DEFAULT_HEADERS)
     soup = BeautifulSoup(response.text, 'lxml')
 
     list_of_jobs = []
