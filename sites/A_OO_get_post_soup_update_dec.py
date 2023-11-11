@@ -42,7 +42,7 @@ def update_peviitor_api(original_function):
         print(json.dumps(data_list, indent=4))
 
          # don't delete this lines if you want to see the graph on scraper's page
-        file = company_name.lower() + '_scraper.py'
+        file = company_name.lower()
         data = {'data': len(data_list)}
         dataset_url = f'https://dev.laurentiumarian.ro/dataset/Scrapers_canghelet/{file}/'
         requests.post(dataset_url, json=data)
