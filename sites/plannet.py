@@ -45,5 +45,5 @@ def scrape_and_update_peviitor(company_name, data_list):
 company_name = 'Plan.Net'
 data_list = get_all_jobs()
 scrape_and_update_peviitor(company_name, data_list)
-print(update_logo('Plan.Net','https://www.plan-net.be/en/_jcr_content/root/header-iparsys/header/logo_with_link/image.coreimg.svg/1578492492470.svg'))
+print(update_logo('Plan.Net','https://www.plan-net.ro/ro/_jcr_content/root/header-iparsys/header/logo_with_link/image.coreimg.svg/1602843605212.svg'))
 
