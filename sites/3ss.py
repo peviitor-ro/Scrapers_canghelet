@@ -15,7 +15,7 @@ def get_all_jobs():
     and collects data from 3SS API.
     """
 
-    response = requests.get('https://www.3ss.tv/careers#open-positions')
+    response = requests.get('https://www.3ss.tv/careers#open-positions', headers=DEFAULT_HEADERS)
     soup = BeautifulSoup(response.text, 'lxml')
 
     list_of_jobs = []
@@ -33,7 +33,6 @@ def get_all_jobs():
                 cities.append(city.text)
 
         list_of_jobs.append({
-            "id": str(uuid.uuid4()),
             "job_title": title,
             "company": "3SS",
             "job_link": link,
