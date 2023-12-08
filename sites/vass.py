@@ -25,7 +25,7 @@ def get_all_jobs():
                 "id": str(uuid.uuid4()),
                 "job_title": title,
                 "job_link": link,
-                "company": "VASSEUSERVICES",
+                "company": "VASS",
                 "country": "Romania",
                 "city": location})
     return list_of_jobs
@@ -38,7 +38,7 @@ def scrape_and_update_peviitor(company_name, data_list):
     """
     return data_list
 
-company_name = 'VASSEUSERVICES'
+company_name = 'VASS'
 data_list = get_all_jobs()
 scrape_and_update_peviitor(company_name, data_list)
-print(update_logo('VASSEUSERVICES', 'https://recruiting.cdn.greenhouse.io/external_greenhouse_job_boards/logos/000/010/018/resized/logo-color.png?1673263262'))
+print(update_logo('VASS', 'https://recruiting.cdn.greenhouse.io/external_greenhouse_job_boards/logos/000/010/018/resized/logo-color.png?1673263262'))
