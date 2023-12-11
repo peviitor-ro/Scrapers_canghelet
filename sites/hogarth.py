@@ -5,32 +5,26 @@
 from A_OO_get_post_soup_update_dec import update_peviitor_api, DEFAULT_HEADERS
 from L_00_logo import update_logo
 import requests
-import uuid
-from bs4 import BeautifulSoup
+
 
 
 def get_all_jobs():
-    response = requests.post('https://www.hogarth.com/careers?key=&departments=All&location=413#jobs-list', headers=DEFAULT_HEADERS)
-    soup = BeautifulSoup(response.text, 'lxml')
 
+    jobs_list = []
+    response = requests.get('https://www.hogarth.com/jobs_list/json', headers=DEFAULT_HEADERS).json()
 
-    list_of_jobs = []
-    jobs = soup.find_all('div', class_ = 'views-row')
+    for job in response:
+        location = job['field_gh_location']
 
-    for job in jobs:
-        link = ('https://www.hogarth.com'+job.find('a')['href'])
-        title = job.find('span', class_ = 'field-content').text.strip()
-        location = job.find('div', class_ = 'field-content').text.split(',')[0].strip()
-        if 'Bucharest' in location:
-            list_of_jobs.append({
-                "id": str(uuid.uuid4()),
-                "job_title": title,
-                "job_link": link,
+        if 'Romania' in location:
+            jobs_list.append({
+                "job_title": job['title'],
+                "job_link": f"https://www.hogarth.com/{job['view_node']}",
                 "company": "HOGARTH",
                 "country": "Romania",
-                "city": location})
-    return list_of_jobs
-
+                "city": location.split(',')[0],
+            })
+    return jobs_list
 
 @update_peviitor_api
 def scrape_and_update_peviitor(company_name, data_list):
