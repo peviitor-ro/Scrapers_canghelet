@@ -39,7 +39,7 @@ def get_all_jobs():
 
         if 'Targu MureÈ\x99' in list_cities:
             cities.remove('Targu MureÈ\x99')
-            cities.append('Targu Mures')
+            cities.append('Targu-Mures')
 
 
         list_of_jobs.append({
