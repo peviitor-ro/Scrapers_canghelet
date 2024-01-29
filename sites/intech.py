@@ -34,7 +34,12 @@ def get_all_jobs():
             for city in location:
                 if city in ['Brasov','Bukarest']:
                     cities.append(city)
-            if 'Brasov' in cities or 'Bukarest' in cities:
+
+            if 'Bukarest' in location:
+                cities.remove('Bukarest')
+                cities.append('Bucuresti')
+
+            if 'Brasov' in cities or 'Bucuresti' in cities:
                 list_of_jobs.append({
                     "job_title": title,
                     "company": "intech",
