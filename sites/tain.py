@@ -30,7 +30,11 @@ def get_all_jobs():
         if link is not None and 'jobs/' in link:
             title = job.find('span', class_='text-block-base-link sm:min-w-[25%] sm:truncate company-link-style').text.strip()
             location = job.find('div', class_='mt-1 text-md').text.split('·')[0].split(',')[0]
+
             if 'București' in location:
+                location = 'Bucuresti'
+
+            if 'Bucuresti' in location:
                 list_of_jobs.append({
                 "id": str(uuid.uuid4()),
                 "job_title": title,
