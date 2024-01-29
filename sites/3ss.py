@@ -32,6 +32,16 @@ def get_all_jobs():
             if city.text in list_cities:
                 cities.append(city.text)
 
+
+        if 'BraÈ\x99ov' in list_cities:
+            cities.remove('BraÈ\x99ov')
+            cities.append('Brasov')
+
+        if 'Targu MureÈ\x99' in list_cities:
+            cities.remove('Targu MureÈ\x99')
+            cities.append('Targu Mures')
+
+
         list_of_jobs.append({
             "job_title": title,
             "company": "3SS",
