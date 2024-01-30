@@ -20,8 +20,9 @@ def get_all_jobs():
         title = job.find('a').text.strip()
         location = job.find('span', class_='location').text.split(',')[0].split('/')[0].strip()
 
-        if 'Bucharest' in location:
+        if 'Bucharest' in location or 'Romania' in location:
             location = 'Bucuresti'
+
 
         if "Romania" in location or 'Bucuresti' in location:
             list_of_jobs.append({
