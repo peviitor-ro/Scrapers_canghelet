@@ -18,9 +18,12 @@ def get_all_jobs():
     for job in jobs:
         link = ('https://boards.greenhouse.io' + job.find('a')['href'])
         title = job.find('a').text.strip()
-        city = job.find('span', class_ = 'location').text.split(',')[0].strip()
-        location = job.find('span', class_='location').text
-        if "Romania" in location:
+        location = job.find('span', class_='location').text.split(',')[0].split('/')[0].strip()
+
+        if 'Bucharest' in location:
+            location = 'Bucuresti'
+
+        if "Romania" in location or 'Bucuresti' in location:
             list_of_jobs.append({
                 "id": str(uuid.uuid4()),
                 "job_title": title,
