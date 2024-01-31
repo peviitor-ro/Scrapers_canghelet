@@ -23,7 +23,11 @@ def get_all_jobs():
         for job in jobs:
             link = (job.find('a', class_ = 'posting-title')['href'])
             title = job.find('h5').text.strip()
-            location = job.find('span', class_ = 'sort-by-location posting-category small-category-label location').text.split(',')[0].strip()
+            location = job.find('span', class_='sort-by-location posting-category small-category-label location').text.split(',')[0].split('-')[0].strip()
+
+            if 'Romania' in location:
+                location = 'Craiova'
+
             if 'Romania' in location or 'Craiova' in location:
                 list_of_jobs.append({
                     "id": str(uuid.uuid4()),
