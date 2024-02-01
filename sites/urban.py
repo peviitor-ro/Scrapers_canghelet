@@ -30,8 +30,11 @@ def get_jobs():
                 try:
                     location = job.find('div', class_='hp-listing__attribute hp-listing__attribute--location').text.split(',')[0].strip().split('/')
                 except:
-                    location = ['Timisoara', 'Bucuresti']
+                    location = 'Timisoara'
                     job_type = 'remote'
+
+                if 'Bucuresti' in location:
+                    location = 'Bucuresti'
 
                 if 'Remote' in location:
                     location = 'Timisoara'
