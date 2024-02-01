@@ -34,10 +34,13 @@ def get_jobs():
                     job_type = 'remote'
 
                 if 'Remote' in location:
-                    city = 'Timisoara'
+                    location = 'Timisoara'
                     job_type = 'remote'
                 else:
                     job_type = 'on-site'
+
+                if 'Cluj' in location:
+                    location = 'Cluj-Napoca'
 
                 list_jobs.append({
                     "id": str(uuid.uuid4()),
