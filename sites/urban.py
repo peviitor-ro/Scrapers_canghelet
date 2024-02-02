@@ -27,6 +27,7 @@ def get_jobs():
             for job in jobs:
                 link = job.find('a')['href']
                 title = job.find('a').text.strip()
+                list_city = ['Timisoara', 'Bucuresti']
                 try:
                     location = job.find('div', class_='hp-listing__attribute hp-listing__attribute--location').text.split(',')[0].strip().split('/')
                 except:
@@ -34,7 +35,7 @@ def get_jobs():
                     job_type = 'remote'
 
                 if 'Bucuresti' in location:
-                    location = 'Bucuresti'
+                   location = list_city
 
                 if 'Remote' in location:
                     location = 'Timisoara'
