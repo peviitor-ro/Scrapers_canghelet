@@ -24,8 +24,9 @@ def get_all_jobs():
         if title =='Rendering Software Engineer':
             location = job['locations'][6]['city']
 
-        if title =='Technical Interface Designer (1 year contract)':
+        elif title =='Technical Interface Designer (1 year contract)':
             location = job['locations'][2]['city']
+
 
         id = job['reqId']
         link = f'https://ea.gr8people.com/jobs/{id}/rendering-software-engineer?locale=en'
