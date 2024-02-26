@@ -1,5 +1,5 @@
 #company: EA Sports
-# API: https://www.ea.com/jobs-feed/filter/studio=EA%20Studios%20-%20SPORTS,city=Bucharest
+# API: https://www.ea.com/ea-studios/ea-sports/job-opportunities/locations/bucharest
 
 
 from A_OO_get_post_soup_update_dec import update_peviitor_api, DEFAULT_HEADERS
