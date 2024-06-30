@@ -7,6 +7,7 @@ import requests
 import uuid
 
 def get_jobs():
+    """This func() makes requests and collects data from DP World API."""
     response = requests.get('https://ehpv.fa.em2.oraclecloud.com/hcmRestApi/resources/latest/recruitingCEJobRequisitions?onlyData=true&expand=requisitionList.secondaryLocations,flexFieldsFacet.values&finder=findReqs;siteNumber=CX_1,facetsList=LOCATIONS%3BWORK_LOCATIONS%3BWORKPLACE_TYPES%3BTITLES%3BCATEGORIES%3BORGANIZATIONS%3BPOSTING_DATES%3BFLEX_FIELDS,limit=25,locationId=300000000275207,sortBy=POSTING_DATES_DESC'
                         , headers = DEFAULT_HEADERS).json()['items'][0]['requisitionList']
 
