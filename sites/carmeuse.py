@@ -10,7 +10,7 @@ import requests
 
 def get_all_jobs():
     """
-    this func() makes requests
+    ...this func() makes requests
     and collects data from Carmeuse API.
     """
 
