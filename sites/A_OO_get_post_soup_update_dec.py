@@ -52,10 +52,10 @@ def update_peviitor_api(original_function):
 
 
          # don't delete this lines if you want to see the graph on scraper's page
-        file = company_name.lower() + '.py'
-        data = {'data': len(data_list)}
-        dataset_url = f'https://dev.laurentiumarian.ro/dataset/Scrapers_canghelet/{file}/'
-        requests.post(dataset_url, json=data)
+        #file = company_name.lower() + '.py'
+        #data = {'data': len(data_list)}
+        #dataset_url = f'https://dev.laurentiumarian.ro/dataset/Scrapers_canghelet/{file}/'
+        #requests.post(dataset_url, json=data)
         ########################################################
 
         return original_function(*args, **kwargs)
@@ -64,12 +64,17 @@ def update_peviitor_api(original_function):
 
 
 def get_token():
-    token_endpoint = 'https://api.peviitor.ro/v5/get_token/'
+    #token_endpoint = 'https://api.peviitor.ro/v5/get_token/'
+    token_endpoint = 'https://api.laurentiumarian.ro/get_token'
     token = requests.post(token_endpoint, json={
         "email": "cristina.anghelet@gmail.com"
-    })
+    },  headers = {
+    "Content-Type": "application/json",
+})
 
     return token.json()['access']
+
+
 
 
 
