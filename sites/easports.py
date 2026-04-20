@@ -1,42 +1,74 @@
 #company: EA Sports
-# API: https://www.ea.com/ea-studios/ea-sports/job-opportunities/locations/bucharest
+# API: https://jobs.ea.com/en_US/careers/Home/?4538=8382&4538_format=3021&listFilterMode=1
 
 
 from A_OO_get_post_soup_update_dec import update_peviitor_api, DEFAULT_HEADERS
 from L_00_logo import update_logo
 import requests
+from bs4 import BeautifulSoup
+from _county import get_county, translate_city
+
+
+def get_soup(url):
+    response = requests.get(url, headers=DEFAULT_HEADERS)
+    return BeautifulSoup(response.text, 'lxml')
 
 
 def get_all_jobs():
     """
     ... this func() makes requests
-    and collects data from EA Sports API.
+    and collects data from EA Sports careers page.
     """
 
-    response = requests.get('https://www.ea.com/jobs-feed/filter/studio=EA%20Studios%20-%20SPORTS,city=Bucharest', headers=DEFAULT_HEADERS).json()['jobs']
-
     list_of_jobs = []
-    for job in response:
+    city = translate_city('Bucharest')
+    county = get_county(city)
+    seen_links = set()
 
-        title = job['title']
-        location = job['locations'][0]['city']
+    for offset in range(0, 1000, 20):
+        if offset == 0:
+            url = 'https://jobs.ea.com/en_US/careers/Home/?4538=8382&4538_format=3021&listFilterMode=1'
+        else:
+            url = f'https://jobs.ea.com/en_US/careers/Home/?4538=8382&4538_format=3021&listFilterMode=1&jobRecordsPerPage=20&jobOffset={offset}'
 
-        if title =='Rendering Software Engineer':
-            location = job['locations'][6]['city']
+        soup = get_soup(url)
+        jobs = soup.find_all('article', class_='article--result')
+        if not jobs:
+            break
 
-        elif title =='Technical Interface Designer (1 year contract)':
-            location = job['locations'][2]['city']
+        page_links = []
+        for job in jobs:
+            link_tag = job.find('a', href=True)
+            if link_tag:
+                page_links.append(link_tag['href'])
 
+        if not page_links:
+            break
 
-        id = job['reqId']
-        link = f'https://ea.gr8people.com/jobs/{id}/rendering-software-engineer?locale=en'
+        for job in jobs:
+            title_tag = job.find('h3')
+            link_tag = job.find('a', href=True)
+            if not title_tag or not link_tag:
+                continue
 
-        list_of_jobs.append({
-            "job_title": title,
-            "company": "easports",
-            "job_link": link,
-            "country": "Romania",
-            "city": location})
+            title = title_tag.get_text(strip=True)
+            link = link_tag['href']
+            if link in seen_links:
+                continue
+
+            job_text = job.get_text(' | ', strip=True)
+            if 'Bucharest, Romania' not in job_text:
+                continue
+
+            seen_links.add(link)
+            list_of_jobs.append({
+                "job_title": title,
+                "company": "easports",
+                "job_link": link,
+                "country": "Romania",
+                "city": city,
+                "county": county,
+            })
 
     return list_of_jobs
 

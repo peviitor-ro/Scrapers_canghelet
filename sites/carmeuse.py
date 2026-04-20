@@ -6,6 +6,7 @@
 from A_OO_get_post_soup_update_dec import update_peviitor_api, DEFAULT_HEADERS
 from L_00_logo import update_logo
 import requests
+from _county import translate_city
 
 
 def get_all_jobs():
@@ -22,24 +23,18 @@ def get_all_jobs():
     for job in response:
 
         title = job['Title']
-        location = job['PrimaryLocation']
+        city = translate_city(job['PrimaryLocation'].split(',')[0])
+        county = job['PrimaryLocation'].split(',')[1].strip()
         id = job['Id']
         link = f'https://ekiz.fa.em2.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX/requisitions/preview/{id}/?location=Romania&locationId=300000000306206&locationLevel=country&mode=job-location'
-
-        if 'Brașov' in location:
-            location = 'Brasov'
-        elif 'Chişcădaga' in location:
-            location = 'Chiscadaga'
-        elif 'Valea Mare-Pravăţ' in location:
-            location = 'Valea Mare-Pravat'
 
         list_of_jobs.append({
                     "job_title": title,
                     "company": "carmeuse",
                     "job_link": link,
                     "country": "Romania",
-                    "city": location
-
+                    "city": city,
+                    "county": county,
                         })
 
     return list_of_jobs

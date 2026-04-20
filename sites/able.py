@@ -13,23 +13,24 @@ def get_all_jobs():
     and collects data from Able API.
     """
 
-    response = requests.get('https://api.ashbyhq.com/posting-api/job-board/able',
+    response = requests.get('https://api.ashbyhq.com/posting-api/job-board/ruby-labs',
         headers=DEFAULT_HEADERS).json()['jobs']
 
 
     list_of_jobs = []
     for job in response:
         title = job['title']
-        id = job['id']
-        link = f'https://jobs.ashbyhq.com/able/{id}'
-
+        link = job['jobUrl']
+        remote = ["remote"] if job['isRemote'] else []
 
         list_of_jobs.append({
             "job_title": title,
             "company": "able",
             "job_link": link,
             "country": "Romania",
-            "city": "Bucuresti"
+            "city": "Bucuresti",
+            "county": "Bucuresti",
+            "remote": remote
 
         })
 

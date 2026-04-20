@@ -5,7 +5,7 @@ from A_OO_get_post_soup_update_dec import update_peviitor_api, DEFAULT_HEADERS
 from L_00_logo import update_logo
 import requests
 from bs4 import BeautifulSoup
-import uuid
+from _county import translate_city, get_county
 
 def get_all_jobs():
 
@@ -25,13 +25,16 @@ def get_all_jobs():
 
 
         if "Romania" in location or 'Bucuresti' in location:
+            city = translate_city(location)
+            county = get_county(city)
             list_of_jobs.append({
-                "id": str(uuid.uuid4()),
                 "job_title": title,
                 "job_link": link,
                 "company": "NewEraTechnology",
                 "country": "Romania",
-                "city": location})
+                "city": city,
+                "county": county
+            })
     return list_of_jobs
 
 

@@ -37,7 +37,8 @@ def get_all_jobs():
                      "company": "inthePocket",
                      "job_link": link,
                      "country": "Romania",
-                     "city": 'Bucuresti'
+                     "city": 'Bucuresti',
+                     "county": 'Bucuresti'
                 })
 
     return list_of_jobs

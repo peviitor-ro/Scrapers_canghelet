@@ -2,13 +2,10 @@
 # API: https://dowjones.jobs/jobs/?q=OPIS&location=Romania
 
 
-
 from A_OO_get_post_soup_update_dec import update_peviitor_api, DEFAULT_HEADERS
 from L_00_logo import update_logo
 import requests
-import uuid
 from bs4 import BeautifulSoup
-
 
 
 def get_all_jobs():
@@ -17,22 +14,24 @@ def get_all_jobs():
     and collects data from OPIS API.
     """
 
-    response = requests.get('https://dowjones.jobs/jobs/?q=OPIS&location=Romania', headers=DEFAULT_HEADERS)
+    response = requests.get(
+        'https://dowjones.jobs/jobs/?q=OPIS&location=Romania', headers=DEFAULT_HEADERS)
     soup = BeautifulSoup(response.text, 'lxml')
 
     list_of_jobs = []
     jobs = soup.find_all('li', class_='direct_joblisting with_description')
 
     for job in jobs:
-        link = ('https://dowjones.jobs'+ job.find('a',)['href'])
-        title = job.find('span', class_ = 'resultHeader').text.strip()
+        link = ('https://dowjones.jobs' + job.find('a',)['href'])
+        title = job.find('span', class_='resultHeader').text.strip()
         list_of_jobs.append({
-            "id": str(uuid.uuid4()),
             "job_title": title,
             "job_link": link,
             "company": "OPIS",
             "country": "Romania",
-            "city": 'Bucuresti'})
+            "city": 'Bucuresti',
+            "county": 'Bucuresti'
+        })
     return list_of_jobs
 
 

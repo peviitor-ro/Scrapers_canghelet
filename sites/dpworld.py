@@ -4,7 +4,7 @@
 from A_OO_get_post_soup_update_dec import update_peviitor_api, DEFAULT_HEADERS
 from L_00_logo import update_logo
 import requests
-import uuid
+from _county import get_county, translate_city
 
 def get_jobs():
     """This func() makes requests and collects data from DP World API."""
@@ -16,15 +16,18 @@ def get_jobs():
 
 
         title = job['Title']
-        location = job['PrimaryLocation']
+        city = translate_city(job['PrimaryLocation'].split(',')[0])
+        county = get_county(city)
         id = job['Id']
         link = f'https://ehpv.fa.em2.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX_1/requisitions/preview/{id}/?location=Romania&locationId=300000000275207&locationLevel=country&mode=location'
-        list_of_jobs.append({"id": str(uuid.uuid4()),
+        list_of_jobs.append({
                         "job_title": title,
                         "job_link":link ,
                         "company": "DPWORLD",
                         "country": "Romania",
-                        "city": location})
+                        "city": city,
+                        "county": county
+                        })
     return list_of_jobs
 
 

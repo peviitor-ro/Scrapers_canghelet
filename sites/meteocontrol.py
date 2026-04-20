@@ -13,11 +13,11 @@ def get_all_jobs():
     and collects data from Meteo Control API.
     """
 
-    response = requests.get('https://meteocontrol.jobs.personio.de/search.json', headers=DEFAULT_HEADERS).json()
+    response = requests.get(
+        'https://meteocontrol.jobs.personio.de/search.json', headers=DEFAULT_HEADERS).json()
 
     list_of_jobs = []
     for job in response:
-
 
         title = job['name']
         location = job['office']
@@ -26,10 +26,12 @@ def get_all_jobs():
         if "Cluj-Napoca" in location:
             list_of_jobs.append({
                 "job_title": title,
-                 "job_link":link ,
+                "job_link": link,
                 "company": "meteocontrol",
                 "country": "Romania",
-                "city": location})
+                "city": "Cluj-Napoca",
+                "county": "Cluj"
+            })
 
     return list_of_jobs
 
@@ -45,4 +47,5 @@ def scrape_and_update_peviitor(company_name, data_list):
 company_name = "meteocontrol"
 data_list = get_all_jobs()
 scrape_and_update_peviitor(company_name, data_list)
-print(update_logo("meteocontrol", "https://assets.cdn.personio.de/logos/87288/social/9b6147d6e2e5464861dfca6a104e3eb6.png"))
+print(update_logo("meteocontrol",
+      "https://assets.cdn.personio.de/logos/87288/social/9b6147d6e2e5464861dfca6a104e3eb6.png"))

@@ -6,6 +6,7 @@ from A_OO_get_post_soup_update_dec import update_peviitor_api, DEFAULT_HEADERS
 from L_00_logo import update_logo
 import requests
 from bs4 import BeautifulSoup
+from _county import get_county
 
 
 def get_all_jobs():
@@ -14,25 +15,28 @@ def get_all_jobs():
     and collects data from intech API.
     """
 
-    response = requests.get('https://www.in-tech.com/en/career/jobs?country=all&location=bukarest&entryType=all&category=all&type=all&remote=all&search=',headers=DEFAULT_HEADERS)
+    response = requests.get(
+        'https://www.in-tech.com/en/career/jobs?country=all&location=bukarest&entryType=all&category=all&type=all&remote=all&search=', headers=DEFAULT_HEADERS)
     soup = BeautifulSoup(response.text, 'lxml')
 
     list_of_jobs = []
-    jobs = soup.find_all('div', class_='mt-0.5 bg-white px-standard-s py-standard-xs sm:px-standard-m sm:py-standard-s')
+    jobs = soup.find_all(
+        'div', class_='mt-0.5 bg-white px-standard-s py-standard-xs sm:px-standard-m sm:py-standard-s')
 
     for job in jobs:
         try:
-            link = 'https://www.in-tech.com' +job.find('a').get('href')
+            link = 'https://www.in-tech.com' + job.find('a').get('href')
         except:
             link = None
 
         if link is not None and 'jobs/' in link:
             title = job.find('a', class_='hover:text-in-tech').text.strip()
             cities = []
-            location = job.find('div', class_='m-1 flex flex-row items-center rounded bg-gray-100 p-1 px-2').text.strip().split(', ')
+            location = job.find(
+                'div', class_='m-1 flex flex-row items-center rounded bg-gray-100 p-1 px-2').text.strip().split(', ')
 
             for city in location:
-                if city in ['Brasov','Bukarest']:
+                if city in ['Brasov', 'Bukarest']:
                     cities.append(city)
 
             if 'Bukarest' in location:
@@ -45,9 +49,9 @@ def get_all_jobs():
                     "company": "intech",
                     "job_link": link,
                     "country": "Romania",
-                    "city": cities
-
-                        })
+                    "city": cities,
+                    "county": [get_county(city) for city in cities]
+                })
 
     return list_of_jobs
 
@@ -63,4 +67,5 @@ def scrape_and_update_peviitor(company_name, data_list):
 company_name = "intech"
 data_list = get_all_jobs()
 scrape_and_update_peviitor(company_name, data_list)
-print(update_logo("intech", "https://imgcdn.bestjobs.eu/cdn/el/plain/employer_logo/58a5c5db02dee.png"))
+print(update_logo("intech",
+      "https://imgcdn.bestjobs.eu/cdn/el/plain/employer_logo/58a5c5db02dee.png"))

@@ -6,6 +6,7 @@ from A_OO_get_post_soup_update_dec import update_peviitor_api, DEFAULT_HEADERS
 from L_00_logo import update_logo
 import requests
 from bs4 import BeautifulSoup
+from _county import get_county, translate_city
 
 
 def get_all_jobs():
@@ -15,26 +16,35 @@ def get_all_jobs():
     """
 
     list_of_jobs = []
-    response = requests.get('https://careers.enea.com/jobs?country=Romania&query=', headers=DEFAULT_HEADERS)
+    response = requests.get(
+        'https://careers.enea.com/jobs?country=Romania&query=', headers=DEFAULT_HEADERS)
     soup = BeautifulSoup(response.text, 'lxml')
 
-    jobs = soup.find_all('li', class_ = 'w-full')
+    jobs = soup.find('ul', id='jobs_list_container').find_all('li', recursive=False)
 
     for job in jobs:
-        try:
-            link = job.find('a').get('href')
-        except:
-            link = None
+        link_tag = job.find('a', href=True)
+        if not link_tag or 'jobs/' not in link_tag['href']:
+            continue
 
-        if link is not None and 'jobs/' in link:
-            title = job.find('span',class_='text-block-base-link sm:min-w-[25%] sm:truncate company-link-style').text.strip()
-            location = job.find('div', class_='mt-1 text-md').text.split('·')[1].split(',')[-2].strip()
-            list_of_jobs.append({
-                "job_title": title,
-                "job_link": link,
-                "company": "ENEA",
-                "country": "Romania",
-                "city": location})
+        title = link_tag.get_text(strip=True)
+        details = job.find('div', class_='mt-1 text-md')
+        if not details:
+            continue
+
+        details_text = ' '.join(details.stripped_strings)
+        if 'Bucharest, Romania' not in details_text:
+            continue
+
+        city = translate_city('Bucharest')
+        county = get_county(city)
+        list_of_jobs.append({
+            "job_title": title,
+            "job_link": link_tag['href'],
+            "company": "ENEA",
+            "country": "Romania",
+            "city": city,
+            "county": county})
     return list_of_jobs
 
 

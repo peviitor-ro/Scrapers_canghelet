@@ -6,6 +6,7 @@ from A_OO_get_post_soup_update_dec import update_peviitor_api, DEFAULT_HEADERS
 from L_00_logo import update_logo
 import requests
 from bs4 import BeautifulSoup
+from _county import translate_city, get_county
 
 
 def get_all_jobs():
@@ -15,7 +16,8 @@ def get_all_jobs():
     """
 
     list_of_jobs = []
-    response = requests.get('https://stripe.com/jobs/search?office_locations=Europe--Bucharest', headers=DEFAULT_HEADERS)
+    response = requests.get(
+        'https://stripe.com/jobs/search?office_locations=Europe--Bucharest', headers=DEFAULT_HEADERS)
     soup = BeautifulSoup(response.text, 'lxml')
 
     jobs = soup.find_all('tr', class_='TableRow')
@@ -28,13 +30,17 @@ def get_all_jobs():
 
         if link is not None and 'jobs/' in link:
             title = job.find('a').text.strip()
-            location = job.find('span', class_='JobsListings__locationDisplayName').text.split(',')[0]
+            city = translate_city(job.find(
+                'span', class_='JobsListings__locationDisplayName').text.split(',')[0])
+            county = get_county(city)
             list_of_jobs.append({
                 "job_title": title,
                 "job_link": link,
                 "company": "stripe",
                 "country": "Romania",
-                "city": location})
+                "city": city,
+                "county": county
+            })
     return list_of_jobs
 
 
@@ -45,7 +51,8 @@ def scrape_and_update_peviitor(company_name, data_list):
     """
     return data_list
 
+
 company_name = "stripe"
 data_list = get_all_jobs()
 scrape_and_update_peviitor(company_name, data_list)
-print(update_logo("stripe","https://b.stripecdn.com/site-srv/assets/img/v3/jobs_v2/thumbnails/stripe-c7f91cf715df9fb9d2198e47de6fc3016a82795e.jpg"))
+print(update_logo("stripe", "https://b.stripecdn.com/site-srv/assets/img/v3/jobs_v2/thumbnails/stripe-c7f91cf715df9fb9d2198e47de6fc3016a82795e.jpg"))

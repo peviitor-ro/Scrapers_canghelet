@@ -6,12 +6,12 @@ from A_OO_get_post_soup_update_dec import update_peviitor_api, DEFAULT_HEADERS
 from L_00_logo import update_logo
 import requests
 from bs4 import BeautifulSoup
-import uuid
+from _county import translate_city, get_county
 
 def get_all_jobs():
 
     response = requests.get('https://careers.sofidel.com/search/?createNewAlert=false&q=&locationsearch=&optionsFacetsDD_customfield2=Romania&optionsFacetsDD_city=&optionsFacetsDD_customfield1=',
-                            headers=DEFAULT_HEADERS)
+                            headers=DEFAULT_HEADERS, verify=False)
     soup = BeautifulSoup(response.text, 'lxml')
 
 
@@ -20,14 +20,16 @@ def get_all_jobs():
     for job in jobs:
         link = ('https://careers.sofidel.com'+job.find('a', class_ = 'jobTitle-link')['href'])
         title = job.find('a', class_ = 'jobTitle-link').text.strip()
-        location = job.find('span', class_ = 'jobLocation').text.split(',')[0].strip()
+        city = translate_city(job.find('span', class_ = 'jobLocation').text.split(',')[0].strip())
+        county = get_county(translate_city(city))
         list_of_jobs.append({
-            "id": str(uuid.uuid4()),
             "job_title": title,
             "job_link": link,
             "company": "SOFIDEL",
             "country": "Romania",
-            "city": location})
+            "city": city,
+            "county": county
+        })
     return list_of_jobs
 
 

@@ -5,7 +5,7 @@
 from A_OO_get_post_soup_update_dec import update_peviitor_api, DEFAULT_HEADERS
 from L_00_logo import update_logo
 import requests
-
+from _county import translate_city, get_county
 
 
 def get_all_jobs():
@@ -15,6 +15,8 @@ def get_all_jobs():
 
     for job in response:
         location = job['field_gh_location']
+        city = translate_city(location.split(',')[0])
+        county = get_county(city)
 
         if 'Romania' in location:
             jobs_list.append({
@@ -22,7 +24,8 @@ def get_all_jobs():
                 "job_link": f"https://www.hogarth.com/{job['view_node']}",
                 "company": "HOGARTH",
                 "country": "Romania",
-                "city": location.split(',')[0],
+                "city": city,
+                "county": county
             })
     return jobs_list
 

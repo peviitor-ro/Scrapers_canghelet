@@ -5,8 +5,8 @@
 from A_OO_get_post_soup_update_dec import update_peviitor_api, DEFAULT_HEADERS
 from L_00_logo import update_logo
 import requests
-import uuid
 from bs4 import BeautifulSoup
+from _county import get_county, translate_city
 
 
 def get_all_jobs():
@@ -14,20 +14,29 @@ def get_all_jobs():
     soup = BeautifulSoup(response.text, 'lxml')
 
     list_of_jobs = []
-    jobs = soup.find_all('div', class_ = 'opening')
+    jobs = soup.find_all('tr', class_='job-post')
 
     for job in jobs:
-        link = (job.find('a')['href'])
-        title = job.find('a').text.strip()
-        location = job.find('span', class_ = 'location').text.split(',')[0].strip()
-        if 'Bucharest' in location:
-            list_of_jobs.append({
-                "id": str(uuid.uuid4()),
-                "job_title": title,
-                "job_link": link,
-                "company": "ONAPSIS",
-                "country": "Romania",
-                "city": location})
+        link_tag = job.find('a', href=True)
+        title_tag = job.find('p', class_='body body--medium')
+        location_tag = job.find('p', class_='body body__secondary body--metadata')
+        if not link_tag or not title_tag or not location_tag:
+            continue
+
+        location = location_tag.get_text(strip=True)
+        if 'Bucharest' not in location or 'Romania' not in location:
+            continue
+
+        city = translate_city('Bucharest')
+        county = get_county(city)
+        list_of_jobs.append({
+            "job_title": title_tag.get_text(strip=True),
+            "job_link": link_tag['href'],
+            "company": "ONAPSIS",
+            "country": "Romania",
+            "city": city,
+            "county": county,
+        })
     return list_of_jobs
 
 @update_peviitor_api

@@ -14,7 +14,8 @@ def get_all_jobs():
     and collects data from Vitamin Software API.
     """
 
-    response = requests.get('https://vitaminsoftware.bamboohr.com/careers/list', headers=DEFAULT_HEADERS).json()['result']
+    response = requests.get('https://vitaminsoftware.bamboohr.com/careers/list',
+                            headers=DEFAULT_HEADERS).json()['result']
 
     list_of_jobs = []
     for job in response:
@@ -28,7 +29,8 @@ def get_all_jobs():
                              "company": "VitaminSoftware",
                              "country": "Romania",
                              "city": "Bucuresti",
-                             "job_type": "Remote"})
+                             "county": "Bucuresti",
+                             "remote": "remote"})
 
     return list_of_jobs
 
@@ -44,10 +46,5 @@ def scrape_and_update_peviitor(company_name, data_list):
 company_name = "VitaminSoftware"
 data_list = get_all_jobs()
 scrape_and_update_peviitor(company_name, data_list)
-print(update_logo("VitaminSoftware", "https://vitaminsoftware.bamboohr.com/manage/logo/?v=31"))
-
-
-
-
-
-
+print(update_logo("VitaminSoftware",
+      "https://vitaminsoftware.bamboohr.com/manage/logo/?v=31"))

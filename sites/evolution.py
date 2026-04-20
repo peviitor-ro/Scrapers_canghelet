@@ -5,6 +5,7 @@
 from A_OO_get_post_soup_update_dec import update_peviitor_api, DEFAULT_HEADERS
 from L_00_logo import update_logo
 import requests
+from _county import translate_city, get_county
 
 
 def get_all_jobs():
@@ -21,16 +22,18 @@ def get_all_jobs():
     for job in response:
         title = job['name']
         id = job['id']
-        location = job['location']['city']
+        city = translate_city(job['location']['city'])
+        county = get_county(city)
         link = f'https://careers.evolution.com/job/{id}/'
 
-        if 'Bucharest' in location:
+        if 'Bucharest' in job['location']['city']:
             list_of_jobs.append({
                 "job_title": title,
                 "company": "evolution",
                 "job_link": link,
                 "country": "Romania",
-                "city": location
+                "city": city,
+                "county": county
 
         })
 

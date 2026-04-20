@@ -5,9 +5,8 @@
 from A_OO_get_post_soup_update_dec import update_peviitor_api, DEFAULT_HEADERS
 from L_00_logo import update_logo
 import requests
-import uuid
 from bs4 import BeautifulSoup
-
+from _county import translate_city, get_county
 
 def get_all_jobs():
     """
@@ -23,14 +22,16 @@ def get_all_jobs():
     for job in jobs:
         link = ('https://www.plan-net.ro' + job.find('a')['href'])
         title = job.find('a').text.strip()
-        location = job.find('p').text.split(' ')[-1].strip()
+        city = translate_city(job.find('p').text.split(' ')[-1].strip())
+        county = get_county(city)
         list_of_jobs.append({
-            "id": str(uuid.uuid4()),
             "job_title": title,
             "job_link": link,
             "company": "Plan.Net",
             "country": "Romania",
-            "city": location})
+            "city": city,
+            "county": county
+        })
     return list_of_jobs
 
 

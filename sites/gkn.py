@@ -5,7 +5,7 @@
 from A_OO_get_post_soup_update_dec import update_peviitor_api
 from L_00_logo import update_logo
 import requests
-
+from _county import translate_city, get_county
 
 def get_jobs():
     """
@@ -36,7 +36,8 @@ def get_jobs():
 
 
         title = job['title']
-        location = job['location'].split(',')[0]
+        city = translate_city(job['location'].split(',')[0])
+        county = get_county(city)
         id = job['id']
         link = f'https://joinus.gknaerospace.com/job/{id}'
         list_of_jobs.append({
@@ -44,7 +45,8 @@ def get_jobs():
             "company": "GknAerospace",
             "job_link": link,
             "country": "Romania",
-            "city": location
+            "city": city,
+            "county": county
         })
     return list_of_jobs
 
