@@ -31,24 +31,28 @@ def update_peviitor_api(original_function):
         #
         API_KEY = os.environ.get('API_KEY')
 
-        token = get_token()
-        post_header = {
-            'Content-Type': 'application/json',
-            'Authorization': f'Bearer {token}',
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36',
-        }
-        validator_endpoint = 'https://api.laurentiumarian.ro/jobs/add/'
-
-        res = requests.post(validator_endpoint,
-                            json=data_list, headers=post_header)
         print(json.dumps(data_list, indent=4))
 
-        if res.status_code == 200:
-            print(
-                f"Data for {company_name} updated successfully on Peviitor API!")
-        else:
-            print(
-                f"Failed to update data for {company_name} on Peviitor API. Status code: {res.status_code}, Response: {res.text}")
+        try:
+            token = get_token()
+            post_header = {
+                'Content-Type': 'application/json',
+                'Authorization': f'Bearer {token}',
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36',
+            }
+            validator_endpoint = 'https://api.laurentiumarian.ro/jobs/add/'
+
+            res = requests.post(validator_endpoint,
+                                json=data_list, headers=post_header)
+
+            if res.status_code == 200:
+                print(
+                    f"Data for {company_name} updated successfully on Peviitor API!")
+            else:
+                print(
+                    f"Failed to update data for {company_name} on Peviitor API. Status code: {res.status_code}, Response: {res.text}")
+        except Exception:
+            print(f"Failed to get token. Skipping API update for {company_name}.")
 
         return original_function(*args, **kwargs)
 
