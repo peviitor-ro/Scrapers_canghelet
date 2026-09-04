@@ -17,6 +17,7 @@ def get_all_jobs():
     list_of_jobs = []
     response = requests.get(
         'https://careers.enea.com/jobs.json', headers=DEFAULT_HEADERS)
+    response.raise_for_status()
     data = response.json()
 
     for item in data.get('items', []):
