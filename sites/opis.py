@@ -1,11 +1,11 @@
 # company OPIS
-# API: https://dowjones.jobs/jobs/?q=OPIS&location=Romania
+# API: https://dowjones.jobs/jobs/feeds/rss/?q=OPIS&location=Romania
 
 
 from A_OO_get_post_soup_update_dec import update_peviitor_api, DEFAULT_HEADERS
 from L_00_logo import update_logo
 import requests
-from bs4 import BeautifulSoup
+from xml.etree import ElementTree
 
 
 def get_all_jobs():
@@ -15,15 +15,17 @@ def get_all_jobs():
     """
 
     response = requests.get(
-        'https://dowjones.jobs/jobs/?q=OPIS&location=Romania', headers=DEFAULT_HEADERS)
-    soup = BeautifulSoup(response.text, 'lxml')
+        'https://dowjones.jobs/jobs/feeds/rss/', params={'q': 'OPIS', 'location': 'Romania'},
+        headers=DEFAULT_HEADERS)
+
+    root = ElementTree.fromstring(response.content)
 
     list_of_jobs = []
-    jobs = soup.find_all('li', class_='direct_joblisting with_description')
-
-    for job in jobs:
-        link = ('https://dowjones.jobs' + job.find('a',)['href'])
-        title = job.find('span', class_='resultHeader').text.strip()
+    for job in root.iter('item'):
+        title = job.findtext('title', default='').strip()
+        link = job.findtext('link', default='').strip()
+        if not link:
+            continue
         list_of_jobs.append({
             "job_title": title,
             "job_link": link,
