@@ -1,40 +1,39 @@
 # company New Era Technology
-# API: https://boards.greenhouse.io/neweratech?t=9455d2142us
+# API: https://boards-api.greenhouse.io/v1/boards/neweratech/jobs
 
 from A_OO_get_post_soup_update_dec import update_peviitor_api, DEFAULT_HEADERS
 from L_00_logo import update_logo
 import requests
-from bs4 import BeautifulSoup
 from _county import translate_city, get_county
+
+API_URL = 'https://boards-api.greenhouse.io/v1/boards/neweratech/jobs'
+
 
 def get_all_jobs():
 
-    response = requests.get('https://boards.greenhouse.io/neweratech?t=9455d2142us', headers=DEFAULT_HEADERS)
-    soup = BeautifulSoup(response.text, 'lxml')
-
+    response = requests.get(API_URL, headers=DEFAULT_HEADERS)
+    response.raise_for_status()
 
     list_of_jobs = []
-    jobs = soup.find_all('div', class_ = 'opening')
-    for job in jobs:
-        link = ('https://boards.greenhouse.io' + job.find('a')['href'])
-        title = job.find('a').text.strip()
-        location = job.find('span', class_='location').text.split(',')[0].split('/')[0].strip()
+    for job in response.json().get('jobs', []):
+        location = (job.get('location') or {}).get('name', '').strip()
 
-        if 'Bucharest' in location or 'Romania' in location:
-            location = 'Bucuresti'
+        if 'Romania' not in location and 'Bucharest' not in location and 'Bucuresti' not in location:
+            continue
 
+        city = location.split(',')[0].split('/')[0].strip()
+        if not city or 'Romania' in city:
+            city = 'Bucuresti'
 
-        if "Romania" in location or 'Bucuresti' in location:
-            city = translate_city(location)
-            county = get_county(city)
-            list_of_jobs.append({
-                "job_title": title,
-                "job_link": link,
-                "company": "NewEraTechnology",
-                "country": "Romania",
-                "city": city,
-                "county": county
-            })
+        city = translate_city(city)
+        list_of_jobs.append({
+            "job_title": job.get('title', '').strip(),
+            "job_link": job.get('absolute_url'),
+            "company": "NewEraTechnology",
+            "country": "Romania",
+            "city": city,
+            "county": get_county(city)
+        })
     return list_of_jobs
 
 
