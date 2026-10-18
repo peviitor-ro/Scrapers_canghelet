@@ -16,7 +16,7 @@ def get_all_jobs():
     """
 
     response = requests.get(
-        'https://www.in-tech.com/en/career/jobs?country=all&location=bukarest&entryType=all&category=all&type=all&remote=all&search=', headers=DEFAULT_HEADERS)
+        'https://www.in-tech.com/en/career/jobs', headers=DEFAULT_HEADERS)
     soup = BeautifulSoup(response.text, 'lxml')
 
     list_of_jobs = []
@@ -26,24 +26,28 @@ def get_all_jobs():
     for job in jobs:
         try:
             link = 'https://www.in-tech.com' + job.find('a').get('href')
-        except:
+        except Exception:
             link = None
 
-        if link is not None and 'jobs/' in link:
-            title = job.find('a', class_='hover:text-in-tech').text.strip()
+        if link is not None and ('jobs/' in link or 'carrers/jobs/' in link):
+            try:
+                title = job.find('a').text.strip()
+            except Exception:
+                title = None
+            if not title:
+                continue
             cities = []
-            location = job.find(
-                'div', class_='m-1 flex flex-row items-center rounded bg-gray-100 p-1 px-2').text.strip().split(', ')
+            try:
+                location = job.find(
+                    'div', class_='m-1 flex flex-row items-center rounded bg-gray-100 p-1 px-2').text.strip().split(', ')
+            except Exception:
+                location = []
 
             for city in location:
-                if city in ['Brasov', 'Bukarest']:
-                    cities.append(city)
+                if city in ['Brasov', 'Bucuresti', 'Bucharest', 'Bukarest']:
+                    cities.append('Bucuresti' if city in ['Bucuresti', 'Bucharest', 'Bukarest'] else city)
 
-            if 'Bukarest' in location:
-                cities.remove('Bukarest')
-                cities.append('Bucuresti')
-
-            if 'Brasov' in cities or 'Bucuresti' in cities:
+            if cities:
                 list_of_jobs.append({
                     "job_title": title,
                     "company": "intech",

@@ -8,6 +8,40 @@ from _county import translate_city, get_county
 
 API_URL = 'https://boards-api.greenhouse.io/v1/boards/neweratech/jobs'
 
+ROMANIA_LOCATION_MARKERS = (
+    'romania',
+    'bucharest',
+    'bucuresti',
+    'bucurești',
+    'cluj',
+    'timisoara',
+    'timișoara',
+    'iasi',
+    'iași',
+    'brasov',
+    'brașov',
+    'sibiu',
+    'craiova',
+    'constanta',
+    'constanța',
+    'oradea',
+    'ploiesti',
+    'ploiești',
+    'pitesti',
+    'pitești',
+    'baia mare',
+    'bacau',
+    'bacău',
+    'targu mures',
+    'târgu mureș',
+    'targu-mures',
+)
+
+
+def is_romania_location(location):
+    location_lower = location.lower()
+    return any(marker in location_lower for marker in ROMANIA_LOCATION_MARKERS)
+
 
 def get_all_jobs():
 
@@ -18,11 +52,11 @@ def get_all_jobs():
     for job in response.json().get('jobs', []):
         location = (job.get('location') or {}).get('name', '').strip()
 
-        if 'Romania' not in location and 'Bucharest' not in location and 'Bucuresti' not in location:
+        if not is_romania_location(location):
             continue
 
         city = location.split(',')[0].split('/')[0].strip()
-        if not city or 'Romania' in city:
+        if not city or 'romania' in city.lower():
             city = 'Bucuresti'
 
         city = translate_city(city)
