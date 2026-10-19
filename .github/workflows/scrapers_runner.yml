@@ -42,9 +42,10 @@ jobs:
           restore-keys: |
             empty-jobs-${{ runner.os }}-
 
-      - name: All scrapers runs
+      - name: All scrapers runs (detect-only, empty jobs recorded to cache)
         env:
           API_KEY: ${{ secrets.API_KEY }}
+          OPENCODE_EMPTY_JOBS_REPAIR_DISABLED: '1'
         run: |
           python sites/A_OOI_main.py
 

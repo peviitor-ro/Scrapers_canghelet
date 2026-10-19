@@ -2,8 +2,10 @@
 #  Auto-repair for scrapers that return an empty jobs list.
 #  ... verifies the company source website before declaring a scraper "done"
 #
+import calendar
 import inspect
 import json
+import math
 import os
 import shutil
 import subprocess
@@ -13,32 +15,44 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 
+#  Modulul sta in `sites/` alaturi de scrapere, deci directoarele de baza sunt
+#  aceleasi cu ale runnerului (`A_OOI_main.py`).
 SITES_DIR = Path(__file__).resolve().parent
 REPO_ROOT = SITES_DIR.parent
-HELPER_PATH = Path(__file__).resolve()
 
 STATE_PATH = REPO_ROOT / ".cache" / "empty_jobs_repair_state.json"
+BUDGET_PATH = REPO_ROOT / ".cache" / "repair_daily_budget.json"
 NO_JOBS_MARKER = "[NO JOBS]"
 
 MAX_LOG_LENGTH = 4000
 REPAIR_TIMEOUT_SECONDS = int(os.getenv("OPENCODE_REPAIR_TIMEOUT", "900"))
 COOLDOWN_DAYS = int(os.getenv("OPENCODE_EMPTY_JOBS_REPAIR_COOLDOWN_DAYS", "7"))
 
+# cel mult BASE_DAILY_BUDGET reparari pe zi; daca nu incap toate scraperele
+# intr-o luna la acest ritm, bugetul creste automat la total / zile_in_luna
+BASE_DAILY_BUDGET = int(os.getenv("OPENCODE_EMPTY_JOBS_REPAIR_DAILY_BUDGET", "10"))
+
 ATTEMPT_ENV = "OPENCODE_EMPTY_JOBS_REPAIR_ATTEMPTED"
 DEPTH_ENV = "OPENCODE_EMPTY_JOBS_REPAIR_DEPTH"
 DISABLED_ENV = "OPENCODE_EMPTY_JOBS_REPAIR_DISABLED"
 MAX_REPAIR_DEPTH = 1
 
-# helperii stau in acelasi director ca scraperele, deci le recunoaistem dupa nume
-INTERNAL_SCRIPT_NAMES = {
+# sursa unica de adevar pentru ce NU se ruleaza ca scraper; runnerul
+# (A_OOI_main.py) importa lista de aici ca sa nu existe doua variante
+EXCLUDE = {
+    "__init__.py",
     "A_OO_empty_jobs_repair.py",
     "A_OO_get_post_soup_update_dec.py",
     "A_OOI_main.py",
+    "000_delete_api_data.py",
     "L_00_logo.py",
     "_county.py",
-    "__init__.py",
-    "__main__.py",
 }
+
+# fisierele de mai jos stau in acelasi director cu scraperele, deci detectia pe
+# baza cadrului de apel trebuie sa le sarapeasca explicit
+NON_SCRAPER_NAMES = EXCLUDE
+
 
 
 def utc_now():
@@ -68,6 +82,84 @@ def truncate_output(content, limit=MAX_LOG_LENGTH):
         return content
 
     return content[:limit] + "\n...[truncated]"
+
+
+def count_scrapers():
+    """
+    ... totalul de scrapere care ruleaza prin script_runner.py
+    """
+    return len([path for path in SITES_DIR.glob("*.py") if path.name not in EXCLUDE])
+
+
+
+def get_daily_budget():
+    """
+    ... cate reparari pot fi facute intr-o zi.
+
+    De regula BASE_DAILY_BUDGET. Daca toate scraperele nu incap in luna curenta la
+    acest ritm (total > buget * zile_in_luna), bugetul creste automat ca sa fie
+    acoperite intr-o singura luna.
+    """
+    total = count_scrapers()
+    today = utc_now()
+    days_in_month = calendar.monthrange(today.year, today.month)[1]
+
+    if total <= BASE_DAILY_BUDGET * days_in_month:
+        return BASE_DAILY_BUDGET
+
+    return math.ceil(total / days_in_month)
+
+
+def load_daily_budget():
+    """
+    ... bugetul zilei curente; se reseteaza automat la schimbarea datei (UTC)
+    """
+    today_key = utc_now().strftime("%Y-%m-%d")
+
+    if not BUDGET_PATH.exists():
+        return {"date": today_key, "used": 0}
+
+    try:
+        with BUDGET_PATH.open("r", encoding="utf-8") as budget_file:
+            budget = json.load(budget_file)
+    except (OSError, json.JSONDecodeError):
+        budget = {}
+
+    if not isinstance(budget, dict) or budget.get("date") != today_key:
+        return {"date": today_key, "used": 0}
+
+    try:
+        used = int(budget.get("used", 0))
+    except (TypeError, ValueError):
+        used = 0
+
+    return {"date": today_key, "used": max(used, 0)}
+
+
+def save_daily_budget(budget):
+    BUDGET_PATH.parent.mkdir(parents=True, exist_ok=True)
+    with BUDGET_PATH.open("w", encoding="utf-8") as budget_file:
+        json.dump(budget, budget_file, indent=2, sort_keys=True)
+
+
+def consume_daily_budget():
+    """
+    ... rezerva un loc in bugetul zilei; False daca bugetul s-a epuizat
+    """
+    budget = load_daily_budget()
+    daily_limit = get_daily_budget()
+
+    if budget["used"] >= daily_limit:
+        return False
+
+    budget["used"] += 1
+    save_daily_budget(budget)
+    return True
+
+
+def get_remaining_daily_budget():
+    budget = load_daily_budget()
+    return max(get_daily_budget() - budget["used"], 0)
 
 
 def get_state_key(script_path):
@@ -142,6 +234,35 @@ def is_cooldown_active(script_path):
     return bool(cooldown_until and utc_now() < cooldown_until)
 
 
+def get_repair_backlog(limit=None):
+    """
+    ... scraperele din cache care asteapta reparare: au returnat lista goala si
+    cooldown-ul lor a expirat (sau nu au apucat sa fie reparate deloc).
+
+    Ordine: cele mai vechi primele, ca sa nu ramana vreuna uitata.
+    """
+    state = load_state()
+    due = []
+
+    for state_key, entry in sorted(state.items()):
+        if not isinstance(entry, dict):
+            continue
+
+        script_path = REPO_ROOT / state_key
+        if not script_path.is_file() or is_cooldown_active(script_path):
+            continue
+
+        due.append((state_key, entry, script_path))
+
+    due.sort(key=lambda item: str(item[1].get("last_empty_at") or ""))
+
+    if limit is not None:
+        due = due[:limit]
+
+    return [(state_key, entry.get("company") or state_key, script_path)
+            for state_key, entry, script_path in due]
+
+
 def infer_company_name(module_globals, script_path):
     for key in ("company_name", "company", "COMPANY"):
         value = module_globals.get(key)
@@ -150,15 +271,35 @@ def infer_company_name(module_globals, script_path):
         if isinstance(value, str) and value.strip():
             return value.strip()
 
-    return script_path.stem
+    return script_path.stem.replace("_scraper", "")
 
 
 def _is_internal_frame(frame_path):
-    return frame_path.name in INTERNAL_SCRIPT_NAMES or frame_path.parent != SITES_DIR
+    # fisierele helper stau in acelasi `sites/` cu scraperele, deci filtrarea
+    # se face pe nume: orice nu e scraper real se sareaza
+    return frame_path.name in NON_SCRAPER_NAMES
+
+
+def scraper_path_for(instance):
+    """
+    ... fisierul sursa al obiectului scraper, luat din modulul in care e definit
+    clasa. Mult mai sigur decat cautarea pe gramezile de apel, pentru ca
+    `send_to_viitor` este mostenit de scraper, dar definit in clasa de baza.
+    """
+    module = sys.modules.get(type(instance).__module__)
+    module_file = getattr(module, "__file__", None)
+    if not module_file:
+        return None
+
+    candidate = Path(module_file).resolve()
+    if candidate.name in NON_SCRAPER_NAMES:
+        return None
+
+    return candidate
 
 
 def get_calling_scraper_context():
-    current_file = HELPER_PATH
+    current_file = Path(__file__).resolve()
     main_module = sys.modules.get("__main__")
     main_file = getattr(main_module, "__file__", None)
 
@@ -202,34 +343,29 @@ def get_calling_scraper_context():
     return None, None
 
 
-def clear_cooldown_for_calling_scraper():
-    script_path, _ = get_calling_scraper_context()
-    if script_path:
-        clear_state(script_path)
-
-
 def repair_scraper_with_opencode(script_path, company):
     if shutil.which("opencode") is None:
         print(f"OpenCode is not installed. Cannot auto-repair {script_path.name}.")
         return False
 
-    state_key = get_state_key(script_path)
     prompt = (
-        f"Fix the scraper `{state_key}`. "
+        f"Fix the scraper `{get_state_key(script_path)}`. "
         f"It exits successfully but returns an empty jobs list for company `{company}`. "
         "Check the company's source website, repair the scraper if jobs still exist there, "
         "and rerun the scraper until it no longer returns an empty list unless the company "
         "truly has no jobs left on the source website."
     )
     repair_context = f"""
-Scraper: {state_key}
-Run command: {sys.executable} {state_key}
+Scraper: {get_state_key(script_path)}
+Run command: {sys.executable} {get_state_key(script_path)}
 
 Requirements:
 - Fix only what is needed for this scraper to return the real jobs.
 - Preserve the existing scraper behavior and output schema.
-- Helper modules live flat in `sites/` with an `A_OO_` / `L_00_` / `_` prefix.
-- The company name is passed to the `@update_peviitor_api` decorated function.
+- Scraper files live in `sites/` and publish jobs through the
+  `@update_peviitor_api` decorator from `sites/A_OO_get_post_soup_update_dec.py`,
+  which wraps `scrape_and_update_peviitor(company_name, data_list)`.
+- An empty `data_list` is treated as "no jobs found" and never posted.
 - Re-run the scraper after your fix and stop only when it exits successfully.
 - Do not leave any extra files next to the scraper.
 
@@ -330,17 +466,23 @@ def rerun_repaired_scraper(script_path):
         print(action.stderr, end="" if action.stderr.endswith("\n") else "\n")
 
     if action.returncode != 0:
-        raise Exception(
+        # SystemExit mosteneste din BaseException: un `except Exception` din
+        # scraper nu-l poate inghiti, deci runnerul vede mereu esecul
+        raise SystemExit(
             "Auto-repair rerun failed:\n" + truncate_output(action.stderr or action.stdout)
         )
 
     return NO_JOBS_MARKER in (action.stdout or "") or NO_JOBS_MARKER in (action.stderr or "")
 
 
-def maybe_repair_empty_jobs_output(company_name):
-    if os.getenv(DISABLED_ENV) == "1":
-        return False
+def clear_cooldown_for_calling_scraper(scraper_path=None):
+    if scraper_path is None:
+        scraper_path, _ = get_calling_scraper_context()
+    if scraper_path:
+        clear_state(scraper_path)
 
+
+def maybe_repair_empty_jobs_output(company_name, scraper_path=None):
     if os.getenv(ATTEMPT_ENV) == "1":
         print("Empty-jobs auto-repair already attempted for this run.", flush=True)
         return False
@@ -354,18 +496,44 @@ def maybe_repair_empty_jobs_output(company_name):
         )
         return False
 
-    script_path, detected_company = get_calling_scraper_context()
-    if not script_path:
+    detected_company = None
+    if scraper_path is None:
+        scraper_path, detected_company = get_calling_scraper_context()
+
+    if not scraper_path:
         print("Could not detect scraper context for empty-jobs verification.", flush=True)
         return False
 
-    company = company_name or detected_company
+    script_path = Path(scraper_path)
+    company = company_name or detected_company or script_path.stem
+
+    # modul detectie: rularea principala doar depisteaza si scrie scraperul in
+    # cache, fara sa consume din bugetul zilnic de reparatii (10/zi) rezervat
+    # rularii repair_empty_jobs.yml
+    if os.getenv(DISABLED_ENV) == "1":
+        update_state(script_path, company, last_empty_at=format_timestamp(utc_now()))
+        print(
+            f"No jobs returned for {company}. {script_path.name} recorded in the "
+            f"empty-jobs cache; repair is disabled for this run.",
+            flush=True,
+        )
+        return False
 
     if is_cooldown_active(script_path):
         update_state(script_path, company, last_empty_at=format_timestamp(utc_now()))
         print(
             f"No jobs returned for {company}. Empty-jobs auto-repair is on cooldown for "
             f"{script_path.name} until {format_timestamp(get_cooldown_until(script_path))}.",
+            flush=True,
+        )
+        return False
+
+    if not consume_daily_budget():
+        update_state(script_path, company, last_empty_at=format_timestamp(utc_now()))
+        print(
+            f"No jobs returned for {company}. Daily repair budget reached "
+            f"({get_daily_budget()}/day); {script_path.name} is queued for a later day "
+            f"({get_remaining_daily_budget()} repair(s) left today).",
             flush=True,
         )
         return False
@@ -389,7 +557,11 @@ def maybe_repair_empty_jobs_output(company_name):
     cleanup_created_sibling_files(script_path, existing_files)
 
     if not repaired:
-        raise Exception(f"Auto-repair failed for empty jobs result in {script_path.name}.")
+        # SystemExit mosteneste din BaseException, deci nu este prins de
+        # 'except Exception' din main() si runnerul vad esecul
+        raise SystemExit(
+            f"Auto-repair failed for empty jobs result in {script_path.name}."
+        )
 
     existing_files = snapshot_sibling_files(script_path)
     try:
@@ -409,4 +581,6 @@ def maybe_repair_empty_jobs_output(company_name):
     else:
         clear_state(script_path)
 
+    # iesim cu succes: rerularea a rezolvat problema sau a confirmat ca
+    # lista vida e corecta. SystemExit nu e prins de 'except Exception'.
     raise SystemExit(0)

@@ -37,14 +37,16 @@ def update_peviitor_api(original_function):
 
         # nu posta o lista goala: ar sterge joburile companiei de pe API
         if not data_list:
-            print(json.dumps(data_list, indent=4))
+            print(f"{company_name} (0 joburi) - nicio pozitie disponibila")
+            print(f"Data for {company_name} - no jobs found.")
+            # markerul se tipareste inainte de hook: repararea reusita se
+            # incheie cu SystemExit(0) si ar suprima orice print de dupa el
+            print(f"{NO_JOBS_MARKER} {company_name}", flush=True)
             maybe_repair_empty_jobs_output(company_name)
-            print(f'{NO_JOBS_MARKER} {company_name}')
             return original_function(*args, **kwargs)
 
+        # scraperul a intors joburi reale, deci iese din cooldown
         clear_cooldown_for_calling_scraper()
-        #
-        API_KEY = os.environ.get('API_KEY')
 
         token = get_token()
         post_header = {
@@ -81,4 +83,7 @@ def get_token():
         "Content-Type": "application/json",
     })
 
-    return token.json()['access']
+    try:
+        return token.json()['access']
+    except (requests.exceptions.JSONDecodeError, KeyError, ValueError):
+        return ""
