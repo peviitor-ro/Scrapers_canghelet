@@ -16,9 +16,25 @@ def get_jobs():
       """
 
     list_jobs = []
+    url = 'https://urbanconnect.ro/find-a-job/'
 
-    response = requests.get('https://urbanconnect.ro/find-a-job/', headers=DEFAULT_HEADERS)
-    soup = BeautifulSoup(response.text, 'lxml')
+    try:
+        response = requests.get(url, headers=DEFAULT_HEADERS, timeout=20)
+        response.raise_for_status()
+        html = response.text
+    except requests.exceptions.RequestException:
+        try:
+            response = requests.get(
+                f'https://r.jina.ai/{url}',
+                headers={**DEFAULT_HEADERS, 'X-Return-Format': 'html'},
+                timeout=60,
+            )
+            response.raise_for_status()
+            html = response.text
+        except requests.exceptions.RequestException:
+            return list_jobs
+
+    soup = BeautifulSoup(html, 'lxml')
     seen_links = set()
 
     for link_tag in soup.find_all('a', href=True):
