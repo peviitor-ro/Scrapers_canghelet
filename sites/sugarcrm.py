@@ -1,11 +1,10 @@
 # company: SugarCRM
-# API: https://jobs.lever.co/sugarcrm
+# API: https://api.ashbyhq.com/posting-api/job-board/sugarai
 
 
 from A_OO_get_post_soup_update_dec import update_peviitor_api, DEFAULT_HEADERS
 from L_00_logo import update_logo
 import requests
-from bs4 import BeautifulSoup
 
 
 def get_all_jobs():
@@ -15,19 +14,14 @@ def get_all_jobs():
     """
 
     response = requests.get(
-        'https://jobs.lever.co/sugarcrm', headers=DEFAULT_HEADERS)
-    soup = BeautifulSoup(response.text, 'lxml')
+        'https://api.ashbyhq.com/posting-api/job-board/sugarai',
+        headers=DEFAULT_HEADERS).json()['jobs']
 
     list_of_jobs = []
-    jobs = soup.find_all('div', class_='posting')
-    for job in jobs:
-        link = (job.find('a', class_='posting-title')['href'])
-        title = job.find('h5').text.strip()
-        location = job.find(
-            'span', class_='sort-by-location posting-category small-category-label location').text.split(',')[0].split('-')[0].strip()
-
-        if 'Romania' in location:
-            location = 'Craiova'
+    for job in response:
+        title = job['title']
+        link = job['jobUrl']
+        location = job['location']
 
         if 'Romania' in location or 'Craiova' in location:
             list_of_jobs.append({
@@ -54,4 +48,4 @@ company_name = 'SugarCRM'
 data_list = get_all_jobs()
 scrape_and_update_peviitor(company_name, data_list)
 print(update_logo('SugarCRM',
-      'https://www.sugarcrm.com/uk/wp-content/themes/sugarcrm/dist/images/sugarcrm-logo-blk.svg'))
+      'https://app.ashbyhq.com/api/images/org-theme-wordmark/6ef21256-985f-4ba7-8d4e-d162fda43cbb/feb254c0-97ee-4490-abd0-d6e0d38e870b/52df7f25-d470-4b03-9c0f-c221e3a6c701.png'))
