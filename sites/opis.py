@@ -1,5 +1,5 @@
 # company OPIS
-# API: https://dowjones.jobs/jobs/feeds/rss/?q=OPIS&location=Romania
+# API: https://dowjones.jobs/jobs/feeds/rss/?q=OPIS
 
 
 from A_OO_get_post_soup_update_dec import update_peviitor_api, DEFAULT_HEADERS
@@ -15,7 +15,7 @@ def get_all_jobs():
     """
 
     response = requests.get(
-        'https://dowjones.jobs/jobs/feeds/rss/', params={'q': 'OPIS', 'location': 'Romania'},
+        'https://dowjones.jobs/jobs/feeds/rss/', params={'q': 'OPIS'},
         headers=DEFAULT_HEADERS)
 
     root = ElementTree.fromstring(response.content)

@@ -13,10 +13,23 @@ def get_all_jobs():
     response = requests.get('https://careers.sofidel.com/search/?createNewAlert=false&q=&locationsearch=&optionsFacetsDD_customfield2=Romania&optionsFacetsDD_city=&optionsFacetsDD_customfield1=',
                             headers=DEFAULT_HEADERS, verify=False)
     soup = BeautifulSoup(response.text, 'lxml')
+    jobs = soup.find_all('tr', class_ = 'data-row')
 
+    if not jobs:
+        jobs = []
+        startrow = 0
+        while True:
+            response = requests.get('https://careers.sofidel.com/search/',
+                                    params={'q': '', 'startrow': startrow},
+                                    headers=DEFAULT_HEADERS, verify=False)
+            soup = BeautifulSoup(response.text, 'lxml')
+            page_jobs = soup.find_all('tr', class_ = 'data-row')
+            if not page_jobs:
+                break
+            jobs.extend(page_jobs)
+            startrow += len(page_jobs)
 
     list_of_jobs = []
-    jobs = soup.find_all('tr', class_ = 'data-row')
     for job in jobs:
         link = ('https://careers.sofidel.com'+job.find('a', class_ = 'jobTitle-link')['href'])
         title = job.find('a', class_ = 'jobTitle-link').text.strip()
