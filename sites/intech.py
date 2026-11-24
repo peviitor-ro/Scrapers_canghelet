@@ -5,8 +5,21 @@
 from A_OO_get_post_soup_update_dec import update_peviitor_api, DEFAULT_HEADERS
 from L_00_logo import update_logo
 import requests
+import unicodedata
 from bs4 import BeautifulSoup
 from _county import get_county
+
+ROMANIAN_CITIES = {
+    'brasov': 'Brasov',
+    'bucuresti': 'Bucuresti',
+    'bucharest': 'Bucuresti',
+    'bukarest': 'Bucuresti',
+}
+
+
+def normalize(text):
+    decomposed = unicodedata.normalize('NFKD', text.lower())
+    return ''.join(char for char in decomposed if not unicodedata.combining(char))
 
 
 def get_all_jobs():
@@ -37,15 +50,21 @@ def get_all_jobs():
             if not title:
                 continue
             cities = []
+            locations = []
             try:
-                location = job.find(
+                locations += job.find(
                     'div', class_='m-1 flex flex-row items-center rounded bg-gray-100 p-1 px-2').text.strip().split(', ')
             except Exception:
-                location = []
+                pass
+            locations += (job.get('data-location') or '').split(',')
 
-            for city in location:
-                if city in ['Brasov', 'Bucuresti', 'Bucharest', 'Bukarest']:
-                    cities.append('Bucuresti' if city in ['Bucuresti', 'Bucharest', 'Bukarest'] else city)
+            for city in locations:
+                canonical_city = ROMANIAN_CITIES.get(normalize(city.strip()))
+                if canonical_city and canonical_city not in cities:
+                    cities.append(canonical_city)
+
+            if not cities and 'romania' in normalize(job.get('data-country') or ''):
+                cities.append('Bucuresti')
 
             if cities:
                 list_of_jobs.append({
